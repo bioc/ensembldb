@@ -71,6 +71,7 @@ ensDbFromGtf <- function(gtf, outfile, path, organism, genomeVersion, version, v
         }
     }
 
+    GTF <- fixCDStypeInEnsemblGTF(GTF)
     ## here on -> call ensDbFromGRanges.
     dbname <- ensDbFromGRanges(GTF, outfile=outfile, path=path, organism=organism,
                                genomeVersion=genomeVersion, version=ensemblVersion, verbose=verbose)
@@ -84,6 +85,23 @@ ensDbFromGtf <- function(gtf, outfile, path, organism, genomeVersion, version, v
     dbDisconnect(con)
     return(dbname)
 }
+
+####============================================================
+##  fixCDStypeInEnsemblGTF
+##
+##  Takes an GRanges object as input and returns a GRanges object in
+##  which the feature type stop_codon and start_codon is replaced by
+##  feature type CDS. This is to fix a potential problem (bug?) in
+##  GTF files from Ensembl, in which the stop_codon or start_codon for
+##  some transcripts is outside of the CDS.
+####------------------------------------------------------------
+fixCDStypeInEnsemblGTF <- function(x){
+    if(any(unique(x$type) %in% c("start_codon", "stop_codon"))){
+        x$type[x$type %in% c("start_codon", "stop_codon")] <- "CDS"
+    }
+    return(x)
+}
+
 
 #### build a EnsDb SQLite database from the GRanges.
 ## we can however not get all of the information from the GRanges (yet), for example,
