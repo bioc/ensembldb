@@ -1,9 +1,16 @@
+CHANGES IN VERSION 1.4.6
+-------------------------
+
+BUG FIXES
+    o Fix bug in ensDbFromGRanges if organism is whitespace-separated.
+
+
 CHANGES IN VERSION 1.4.5
 -------------------------
 
 MINOR CHANGES
     o Fix typos in documentation.
-    
+
 
 CHANGES IN VERSION 1.4.4
 -------------------------
