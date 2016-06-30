@@ -181,11 +181,38 @@ setMethod("select", "EnsDb",
     }
     ## Map the columns to column names we have in the database.
     ensCols <- ensDbColumnForColumn(x, columns)
+    ## Add also the filter columns!
+    filtCols <- unlist(lapply(keys, function(z){
+        return(column(z))
+    }))
+    ensCols <- unique(c(ensCols, filtCols))
     ## OK, now perform the query given the filters we've got.
     res <- getWhat(x, columns=ensCols, filter=keys)
+    ## Order results if length of filters is 1.
+    if (length(keys) == 1) {
+        ## Define the filters on which we could sort.
+        sortFilts <- c("GenenameFilter", "GeneidFilter", "EntrezidFilter", "GenebiotypeFilter",
+                       "SymbolFilter", "TxidFilter", "TxbiotypeFilter", "ExonidFilter",
+                       "ExonrankFilter", "SeqnameFilter")
+        if (class(keys[[1]]) %in% sortFilts) {
+            keyvals <- value(keys[[1]])
+            ## Handle symlink Filter differently:
+            if (is(keys[[1]], "SymbolFilter")) {
+                sortCol <- column(keys[[1]])
+            } else {
+                sortCol <- removePrefix(column(keys[[1]], x))
+            }
+            res <- res[order(match(res[, sortCol], keyvals)), , drop=FALSE]
+        }
+    } else {
+        ## Show a mild warning message
+        message("Note: ordering of the results might not match ordering of keys!")
+    }
     colMap <- .getColMappings(x)
     colnames(res) <- colMap[colnames(res)]
-    return(res[, columns])
+    rownames(res) <- NULL
+    return(res)
+    ##return(res[, columns])
 }
 
 
@@ -237,6 +264,8 @@ setMethod("mapIds", "EnsDb", function(x, keys, column, keytype, ..., multiVals){
         keytype <- NULL
     }
     res <- select(x, keys=keys, columns=columns, keytype=keytype)
+    ## Eventually I have to subset the result to just the columns I want
+    res <- res[, columns]
     if(nrow(res) == 0)
         return(character())
     ## Handling multiVals.
@@ -275,7 +304,7 @@ setMethod("mapIds", "EnsDb", function(x, keys, column, keytype, ..., multiVals){
            asNA={
                ## Split the vector, set all those with multi mappings NA.
                vals <- split(res[, 2], f=factor(res[, 1], levels=unique(theNames)))
-               vals[unlist(lapply(vals, length)) > 1] <- NA
+               vals[lengths(vals) > 1] <- NA
                return(unlist(vals))
            },
            CharacterList={

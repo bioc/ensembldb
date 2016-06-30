@@ -108,14 +108,12 @@ test_mapIds <- function(){
     allgenes <- keys(edb, keytype="GENEID")
     randordergenes <- allgenes[sample(1:length(allgenes), 100)]
     system.time(
-        mi <- mapIds(edb, keys=allgenes, keytype="GENEID")
+        mi <- mapIds(edb, keys=allgenes, keytype="GENEID", column="GENENAME")
     )
-    checkEquals(unname(mi), keys(edb, keytype="GENEID"))
-    checkEquals(names(mi), unname(mi))
+    checkEquals(names(mi), allgenes)
     ## What happens if the ordering is different:
-    mi <- mapIds(edb, keys=randordergenes, keytype="GENEID")
-    checkEquals(unname(mi), randordergenes)
-    checkEquals(names(mi), unname(mi))
+    mi <- mapIds(edb, keys=randordergenes, keytype="GENEID", column="GENENAME")
+    checkEquals(names(mi), randordergenes)
 
     ## Now check the different options:
     ## Handle multi mappings.
@@ -148,3 +146,28 @@ test_mapIds <- function(){
     checkTrue(all(TestS$SEQSTRAND == -1))
 }
 
+test_select_order_keys <- function() {
+    ks <- c("ZBTB16", "BCL2", "SKA2", "BCL2L11")
+    ## gene_name
+    res <- select(edb, keys = ks, keytype = "GENENAME")
+    checkEquals(unique(res$GENENAME), ks)
+    res <- select(edb, keys = GenenameFilter(ks))
+    checkEquals(unique(res$GENENAME), ks)
+
+    ## Using two filters;
+    res <- select(edb, keys = list(GenenameFilter(ks),
+                                   TxbiotypeFilter("nonsense_mediated_decay")),
+                  columns = c("GENENAME", "TXID"))
+    checkEquals(colnames(res), c("GENENAME", "TXID", "TXBIOTYPE"))
+    ## We don't expect same sorting here!
+    checkTrue(!all(unique(res$GENENAME) == ks[ks %in% unique(res$GENENAME)]))
+
+    ## tx_biotype
+    ks <- c("retained_intron", "nonsense_mediated_decay")
+    res <- select(edb, keys = ks, keytype = "TXBIOTYPE",
+                  columns = c("GENENAME"))
+    checkEquals(unique(res$TXBIOTYPE), ks)
+    res <- select(edb, keys = TxbiotypeFilter(ks),
+                  keytype = "TXBIOTYPE", columns = c("GENENAME", "TXBIOTYPE"))
+    checkEquals(unique(res$TXBIOTYPE), ks)
+}

@@ -1,3 +1,12 @@
+CHANGES IN VERSION 1.4.7
+------------------------
+
+SIGNIFICANT USER-VISIBLE CHANGES
+    o Columns used for the filtering of results in the select call are automatically returned.
+    o Ordering of results from select calls matches ordering of the provided keys (or of the
+      values of a filter if only one was submitted).
+
+
 CHANGES IN VERSION 1.4.6
 -------------------------
 

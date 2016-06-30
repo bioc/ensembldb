@@ -114,14 +114,14 @@
       keys/IDs, a single filter object extending
       \code{\linkS4class{BasicFilter}} or a list of such objects. For
       the latter, the argument \code{keytype} does not have to be
-      specified. Importantly however, if the filtering system is used,
+      specified. Importantly however, more than one filter is used,
       the ordering of the results might not represent the ordering of
       the keys.
 
       The method usually returns a named character vector or, depending
       on the argument \code{multiVals} a named list, with names
       corresponding to the keys (same ordering is only guaranteed if
-      \code{keys} is a character vector).
+      \code{keys} is a character vector or a single filter).
     }
 
     \item{select}{
@@ -132,7 +132,12 @@
       character vector of keys/IDs, a single filter object extending
       \code{\linkS4class{BasicFilter}} or a list of such objects. For
       the latter, the argument \code{keytype} does not have to be
-      specified.
+      specified. The column corresponding to the provided \code{keytype}
+      or all columns used by alternatively submitted filter objects are
+      also included in the result \code{data.frame}. If \code{keys} is a
+      vector of key values or a single filter object, the ordering of
+      the rows in the returned \code{data.frame} matches the keys
+      respectively values from the filter.
 
       Returns a \code{data.frame} with the column names corresponding to
       the argument \code{columns} and rows with all data matching the
@@ -206,6 +211,18 @@ Y <- select(edb, keys=list(SeqnameFilter("Y"), GenebiotypeFilter("lincRNA")),
             columns=c("GENEID", "GENEBIOTYPE", "TXID", "GENENAME"))
 head(Y)
 nrow(Y)
+
+## Get data for selected genes. If a single filter is used the ordering matches
+## the keys.
+gns <- c("ZBTB16", "BCL2", "SKA2", "BCL2L11")
+select(edb, keys=gns, keytype="GENENAME", columns=c("TXID", "GENEID", "TXBIOTYPE"))
+
+## This is the same as using a single GenenameFilter
+select(edb, keys = GenenameFilter(gns), columns = c("TXID", "GENEID", "TXBIOTYPE"))
+
+## The ordering is however arbitrary of more than one filter is used.
+select(edb, keys = list(GenenameFilter(gns), TxbiotypeFilter("protein_coding")),
+       columns = c("TXID", "GENEID", "TXBIOTYPE"))
 
 }
 \keyword{classes}
