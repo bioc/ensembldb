@@ -1,3 +1,9 @@
+CHANGES IN VERSION 1.6.1
+------------------------
+
+BUG FIXES:
+    o Fix plain return statements in shiny server.R.
+
 CHANGES IN VERSION 1.5.14
 -------------------------
 
