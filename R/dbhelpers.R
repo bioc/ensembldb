@@ -58,6 +58,8 @@ EnsDb <- function(x){
     if (is.character(OK))
         stop(OK)
     tables <- dbListTables(con)
+    ## Quick fix for EnsDbs containing also protein data (issue #30):
+    tables <- tables[!(tables %in% c("protein", "uniprot", "protein_domain"))]
     ## read the columns for these tables.
     Tables <- vector(length=length(tables), "list")
     for(i in 1:length(Tables)){

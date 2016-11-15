@@ -231,6 +231,9 @@ setMethod("getGenomeTwoBitFile", "EnsDb", function(x){
 setMethod("listTables", "EnsDb", function(x, ...){
     if(length(x@tables)==0){
         tables <- dbListTables(dbconn(x))
+        ## Quick fix for EnsDbs containing also protein data (issue #30):
+        tables <- tables[!(tables %in% c("protein", "uniprot",
+                                         "protein_domain"))]
         ## read the columns for these tables.
         Tables <- vector(length=length(tables), "list")
         for(i in 1:length(Tables)){
@@ -258,6 +261,9 @@ setMethod("listColumns", "EnsDb", function(x,
                                            skip.keys=TRUE, ...){
     if(length(x@tables)==0){
         tables <- dbListTables(dbconn(x))
+        ## Quick fix for EnsDbs containing also protein data (issue #30):
+        tables <- tables[!(tables %in% c("protein", "uniprot",
+                                         "protein_domain"))]
         ## read the columns for these tables.
         Tables <- vector(length=length(tables), "list")
         for(i in 1:length(Tables)){
