@@ -78,6 +78,7 @@ In the example below we load an Ensembl based annotation package for Homo
 sapiens, Ensembl version 75. The =EnsDb= object providing access to the underlying
 SQLite database is bound to the variable name =EnsDb.Hsapiens.v75=.
 
+#+NAME: load-libs
 #+BEGIN_SRC R :ravel warning=FALSE, message=FALSE
   library(EnsDb.Hsapiens.v75)
 
@@ -86,10 +87,20 @@ SQLite database is bound to the variable name =EnsDb.Hsapiens.v75=.
   ## print some informations for this package
   edb
 
-  ## for what organism was the database generated?
+  ## For what organism was the database generated?
   organism(edb)
+
 #+END_SRC
 
+
+#+NAME: no-network
+#+BEGIN_SRC R :results silent :ravel echo = FALSE, results = "hide"
+  ## Disable code chunks that require network connection - conditionally
+  ## disable this on Windows only. This is to avoid TIMEOUT errors on the
+  ## Bioconductor Windows build maching (issue #47).
+  use_network <- FALSE
+
+#+END_SRC
 
 * Using =ensembldb= annotation packages to retrieve specific annotations
 
@@ -102,8 +113,10 @@ additional filters specific to the data stored in =EnsDb= databases. The
 classes, each of them (except the =GRangesFilter=) working on a single
 column/field in the database.
 
+#+NAME: filters
 #+BEGIN_SRC R 
   supportedFilters(edb)
+
 #+END_SRC
 
 These filters can be divided into 3 main filter types:
@@ -178,6 +191,7 @@ columns. Alternatively, by setting =return.type= to "DataFrame", or "data.frame"
 the method would return a =DataFrame= or =data.frame= object instead of the default
 =GRanges=.
 
+#+NAME: transcripts
 #+BEGIN_SRC R
   Tx <- transcripts(edb, filter = list(GenenameFilter("BCL2L11")))
 
@@ -188,6 +202,7 @@ the method would return a =DataFrame= or =data.frame= object instead of the defa
 
   ## or extract the biotype with
   head(Tx$tx_biotype)
+
 #+END_SRC
 
 The parameter =columns= of the extractor methods (such as =exons=, =genes= or
@@ -205,9 +220,11 @@ specified by the =columns= parameter are retrieved.
 Instead of passing a filter /object/ to the method it is also possible to provide
 a filter /expression/ written as a =formula=.
 
+#+NAME: transcripts-filter-expression
 #+BEGIN_SRC R
   ## Use a filter expression to perform the filtering.
   transcripts(edb, filter = ~ genename == "ZBTB16")
+
 #+END_SRC
 
 Filter expression have to be written as a formula (i.e. starting with a =~=) in
@@ -217,12 +234,14 @@ To get an overview of database tables and available columns the function
 =listTables= can be used. The method =listColumns= on the other hand lists columns
 for the specified database table.
 
+#+NAME: list-columns
 #+BEGIN_SRC R
   ## list all database tables along with their columns
   listTables(edb)
 
   ## list columns from a specific table
   listColumns(edb, "tx")
+
 #+END_SRC
 
 Thus, we could retrieve all transcripts of the biotype /nonsense_mediated_decay/
@@ -232,6 +251,7 @@ the name of the gene for each transcript. Note that we are changing here the
 =return.type= to =DataFrame=, so the method will return a =DataFrame= with the
 results instead of the default =GRanges=.
 
+#+NAME: transcripts-example2
 #+BEGIN_SRC R
   Tx <- transcripts(edb,
                     columns = c(listColumns(edb , "tx"), "gene_name"),
@@ -239,15 +259,18 @@ results instead of the default =GRanges=.
                     return.type = "DataFrame")
   nrow(Tx)
   Tx
+
 #+END_SRC
 
 For protein coding transcripts, we can also specifically extract their coding
 region. In the example below we extract the CDS for all transcripts encoded on
 chromosome Y.
 
+#+NAME: cdsBy
 #+BEGIN_SRC R
   yCds <- cdsBy(edb, filter = SeqNameFilter("Y"))
   yCds
+
 #+END_SRC
 
 Using a =GRangesFilter= we can retrieve all features from the database that are
@@ -256,6 +279,7 @@ below we query all genes that are partially overlapping with a small region on
 chromosome 11. The filter restricts to all genes for which either an exon or an
 intron is partially overlapping with the region.
 
+#+NAME: genes-GRangesFilter
 #+BEGIN_SRC R
   ## Define the filter
   grf <- GRangesFilter(GRanges("11", ranges = IRanges(114000000, 114000050),
@@ -267,6 +291,7 @@ intron is partially overlapping with the region.
 
   ## Next we retrieve all transcripts for that gene so that we can plot them.
   txs <- transcripts(edb, filter = GenenameFilter(gn$gene_name))
+
 #+END_SRC
 
 #+BEGIN_SRC R :ravel tx-for-zbtb16, message=FALSE, fig.align='center', fig.width=7.5, fig.height=5
@@ -289,8 +314,10 @@ region. Below we fetch these 4 transcripts. Note, that a call to =exons= will
 not return any features from the database, as no exon is overlapping with the
 region.
 
+#+NAME: transcripts-GRangesFilter
 #+BEGIN_SRC R
   transcripts(edb, filter = grf)
+
 #+END_SRC
 
 The =GRangesFilter= supports also =GRanges= defining multiple regions and a
@@ -304,6 +331,7 @@ to further fine-tune the query.
 The functions =listGenebiotypes= and =listTxbiotypes= can be used to get an overview
 of allowed/available gene and transcript biotype
 
+#+NAME: biotypes
 #+BEGIN_SRC R
   ## Get all gene biotypes from the database. The GeneBiotypeFilter
   ## allows to filter on these values.
@@ -311,12 +339,14 @@ of allowed/available gene and transcript biotype
 
   ## Get all transcript biotypes from the database.
   listTxbiotypes(edb)
+
 #+END_SRC
 
 Data can be fetched in an analogous way using the =exons= and =genes=
 methods. In the example below we retrieve =gene_name=, =entrezid= and the
 =gene_biotype= of all genes in the database which names start with "BCL2".
 
+#+NAME: genes-BCL2
 #+BEGIN_SRC R
   ## We're going to fetch all genes which names start with BCL. To this end
   ## we define a GenenameFilter with partial matching, i.e. condition "like"
@@ -327,6 +357,7 @@ methods. In the example below we retrieve =gene_name=, =entrezid= and the
 		return.type = "DataFrame")
   nrow(BCLs)
   BCLs
+
 #+END_SRC
 
 Sometimes it might be useful to know the length of genes or transcripts
@@ -337,6 +368,7 @@ these chromosomes. For the first query we combine two =AnnotationFilter= objects
 using an =AnnotationFilterList= object, in the second we define the query using a
 filter expression.
 
+#+NAME: example-AnnotationFilterList
 #+BEGIN_SRC R
   ## determine the average length of snRNA, snoRNA and rRNA genes encoded on
   ## chromosomes X and Y.
@@ -348,6 +380,7 @@ filter expression.
   ## chromosomes.
   mean(lengthOf(edb, of = "tx", filter = ~ gene_biotype == "protein_coding" &
                                     seq_name %in% c("X", "Y")))
+
 #+END_SRC
 
 Not unexpectedly, transcripts of protein coding genes are longer than those of
@@ -356,12 +389,14 @@ snRNA, snoRNA or rRNA genes.
 At last we extract the first two exons of each transcript model from the
 database.
 
+#+NAME: example-first-two-exons
 #+BEGIN_SRC R
   ## Extract all exons 1 and (if present) 2 for all genes encoded on the
   ## Y chromosome
   exons(edb, columns = c("tx_id", "exon_idx"),
 	filter = list(SeqNameFilter("Y"),
                       ExonRankFilter(3, condition = "<")))
+
 #+END_SRC
 
 
@@ -381,9 +416,11 @@ CDS.
 A simple use case is to retrieve all genes encoded on chromosomes X and Y from
 the database.
 
+#+NAME: transcriptsBy-X-Y
 #+BEGIN_SRC R
   TxByGns <- transcriptsBy(edb, by = "gene", filter = SeqNameFilter(c("X", "Y")))
   TxByGns
+
 #+END_SRC
 
 Since Ensembl contains also definitions of genes that are on chromosome variants
@@ -396,12 +433,14 @@ restrict to Ensembl genes only, as also /LRG/ (Locus Reference Genomic)
 genes[fn:3] are defined in the database, which are partially redundant with
 Ensembl genes.
 
-#+BEGIN_SRC R :ravel eval=FALSE
+#+NAME: exonsBy-RNAseq
+#+BEGIN_SRC R :ravel message = FALSE, eval = FALSE
   ## will just get exons for all genes on chromosomes 1 to 22, X and Y.
   ## Note: want to get rid of the "LRG" genes!!!
   EnsGenes <- exonsBy(edb, by = "gene", filter = AnnotationFilterList(
                                             SeqNameFilter(c(1:22, "X", "Y")),
                                             GeneIdFilter("ENSG", "startsWith")))
+
 #+END_SRC
 
 The code above returns a =GRangesList= that can be used directly as an input for
@@ -411,7 +450,8 @@ Alternatively, the above =GRangesList= can be transformed to a =data.frame= in
 /SAF/ format that can be used as an input to the =featureCounts= function of the
 =Rsubread= package [fn:5].
 
-#+BEGIN_SRC R :ravel eval=FALSE
+#+NAME: toSAF-RNAseq
+#+BEGIN_SRC R :ravel message = FALSE, eval=FALSE
   ## Transforming the GRangesList into a data.frame in SAF format
   EnsGenes.SAF <- toSAF(EnsGenes)
 
@@ -426,11 +466,13 @@ In addition, the =disjointExons= function (similar to the one defined in
 =GenomicFeatures=) can be used to generate a =GRanges= of non-overlapping exon
 parts which can be used in the =DEXSeq= package.
 
-#+BEGIN_SRC R :ravel eval=FALSE
+#+NAME: disjointExons
+#+BEGIN_SRC R :ravel message = FALSE, eval=FALSE
   ## Create a GRanges of non-overlapping exon parts.
   DJE <- disjointExons(edb, filter = AnnotationFilterList(
 				SeqNameFilter(c(1:22, "X", "Y")),
 				GeneIdFilter("ENSG%", "startsWith")))
+
 #+END_SRC
 
 
@@ -455,7 +497,8 @@ the package, subset to genes encoded on sequences available in the =FaFile= and
 extract all of their sequences. Note: these sequences represent the sequence
 between the chromosomal start and end coordinates of the gene.
 
-#+BEGIN_SRC R :ravel eval=FALSE
+#+NAME: transcript-sequence-AnnotationHub
+#+BEGIN_SRC R :ravel message = FALSE, eval = FALSE
   library(EnsDb.Hsapiens.v75)
   library(Rsamtools)
   edb <- EnsDb.Hsapiens.v75
@@ -474,14 +517,14 @@ between the chromosomal start and end coordinates of the gene.
   ## all of the gene's exons and introns.
   geneSeqs <- getSeq(Dna, genes)
 
-
 #+END_SRC
 
 To retrieve the (exonic) sequence of transcripts (i.e. without introns) we can
 use directly the =extractTranscriptSeqs= method defined in the =GenomicFeatures= on
 the =EnsDb= object, eventually using a filter to restrict the query.
 
-#+BEGIN_SRC R :ravel eval=FALSE
+#+NAME: transcript-sequence-extractTranscriptSeqs
+#+BEGIN_SRC R :ravel message = FALSE, eval = FALSE
   ## get all exons of all transcripts encoded on chromosome Y
   yTx <- exonsBy(edb, filter = SeqNameFilter("Y"))
 
@@ -518,7 +561,8 @@ UCSC, NCBI and Ensembl chromosome names for the /main/ chromosomes).
 
 In the example below we change the seqnames style to UCSC.
 
-#+BEGIN_SRC R :ravel message=FALSE
+#+NAME: seqlevelsStyle
+#+BEGIN_SRC R :ravel message = FALSE
   ## Change the seqlevels style form Ensembl (default) to UCSC:
   seqlevelsStyle(edb) <- "UCSC"
 
@@ -526,6 +570,7 @@ In the example below we change the seqnames style to UCSC.
   genesY <- genes(edb, filter = ~ seq_name == "chrY")
   ## The seqlevels of the returned GRanges are also in UCSC style
   seqlevels(genesY)
+
 #+END_SRC
 
 Note that in most instances no mapping is available for sequences not
@@ -537,7 +582,8 @@ ones from Ensembl) are returned. With =ensembldb.seqnameNotFound= "MISSING" each
 time a seqname can not be found an error is thrown. For all other cases
 (e.g. =ensembldb.seqnameNotFound = NA=) the value of the option is returned.
 
-#+BEGIN_SRC R
+#+NAME: seqlevelsStyle-2
+#+BEGIN_SRC R :ravel message = FALSE
   seqlevelsStyle(edb) <- "UCSC"
 
   ## Getting the default option:
@@ -562,7 +608,8 @@ the =BSGenome= package for the human genome from UCSC. The specified version
 while we changed the style of the seqnames to UCSC we did not change the naming
 of the genome release.
 
-#+BEGIN_SRC R :ravel warning=FALSE, message=FALSE
+#+NAME: extractTranscriptSeqs-BSGenome
+#+BEGIN_SRC R :ravel warning = FALSE, message = FALSE
   library(BSgenome.Hsapiens.UCSC.hg19)
   bsg <- BSgenome.Hsapiens.UCSC.hg19
 
@@ -587,8 +634,10 @@ of the genome release.
 
 At last changing the seqname style to the default value ="Ensembl"=.
 
+#+NAME: seqlevelsStyle-restore
 #+BEGIN_SRC R
   seqlevelsStyle(edb) <- "Ensembl"
+
 #+END_SRC
 
 
@@ -619,7 +668,7 @@ not necessary if we just want to retrieve gene models from an =EnsDb= object, as
 the =ensembldb= package internally checks the =ucscChromosomeNames= option and,
 depending on that, maps Ensembl chromosome names to UCSC chromosome names.
 
-#+BEGIN_SRC R :ravel gviz-plot, message=FALSE, fig.align='center', fig.width=7.5, fig.height=2.25
+#+BEGIN_SRC R :ravel gviz-plot, message=FALSE, fig.align='center', fig.width=7.5, fig.height=2.3
   ## Loading the Gviz library
   library(Gviz)
   library(EnsDb.Hsapiens.v75)
@@ -689,6 +738,7 @@ filter expression as a =formula=).
 
   ## Create a plot for all transcripts of the gene SKA2
   autoplot(edb, ~ genename == "SKA2")
+
 #+END_SRC
 
 To plot the genomic region and plot genes from both strands we can use a
@@ -699,6 +749,7 @@ To plot the genomic region and plot genes from both strands we can use a
   ska2 <- genes(edb, filter = ~ genename == "SKA2")
   strand(ska2) <- "*"
   autoplot(edb, GRangesFilter(ska2), names.expr = "gene_name")
+
 #+END_SRC
 
 
@@ -715,7 +766,8 @@ In the example below we first evaluate all the available columns and keytypes in
 the database and extract then the gene names for all genes encoded on chromosome
 X.
 
-#+BEGIN_SRC R
+#+NAME: AnnotationDbi
+#+BEGIN_SRC R :ravel message = FALSE
   library(EnsDb.Hsapiens.v75)
   edb <- EnsDb.Hsapiens.v75
 
@@ -738,6 +790,7 @@ X.
   ## Get all gene names for genes encoded on chromosome Y.
   gnames <- keys(edb, keytype = "GENENAME", filter = SeqNameFilter("Y"))
   head(gnames)
+
 #+END_SRC
 
 In the next example we retrieve specific information from the database using the
@@ -746,7 +799,8 @@ In the next example we retrieve specific information from the database using the
 we employ the filtering system to perform a more fine-grained query to fetch
 only the protein coding transcripts for these genes.
 
-#+BEGIN_SRC R :ravel warning=FALSE
+#+NAME: select
+#+BEGIN_SRC R :ravel message = FALSE, warning=FALSE
   ## Use the /standard/ way to fetch data.
   select(edb, keys = c("BCL2", "BCL2L11"), keytype = "GENENAME",
 	 columns = c("GENEID", "GENENAME", "TXID", "TXBIOTYPE"))
@@ -755,24 +809,27 @@ only the protein coding transcripts for these genes.
   select(edb, keys = ~ genename %in% c("BCL2", "BCL2L11") &
                   tx_biotype == "protein_coding",
 	 columns = c("GENEID", "GENENAME", "TXID", "TXBIOTYPE"))
+
 #+END_SRC
 
 Finally, we use the =mapIds= method to establish a mapping between ids and
 values. In the example below we fetch transcript ids for the two genes from the
 example above.
 
-#+BEGIN_SRC R
+#+NAME: mapIds
+#+BEGIN_SRC R :ravel message = FALSE
   ## Use the default method, which just returns the first value for multi mappings.
   mapIds(edb, keys = c("BCL2", "BCL2L11"), column = "TXID", keytype = "GENENAME")
 
   ## Alternatively, specify multiVals="list" to return all mappings.
   mapIds(edb, keys = c("BCL2", "BCL2L11"), column = "TXID", keytype = "GENENAME",
-         multiVals = "list")
+	 multiVals = "list")
 
   ## And, just like before, we can use filters to map only to protein coding transcripts.
   mapIds(edb, keys = list(GenenameFilter(c("BCL2", "BCL2L11")),
                           TxBiotypeFilter("protein_coding")), column = "TXID",
-         multiVals = "list")
+	 multiVals = "list")
+
 #+END_SRC
 
 Note that, if the filters are used, the ordering of the result does no longer
@@ -801,6 +858,9 @@ help avoiding them):
 + At present, =EnsDb= support only genes/transcripts for which all of their
   exons are encoded on the same chromosome and the same strand.
 
++ Since a single Ensembl gene ID might be mapped to multiple NCBI Entrezgene IDs
+  methods such as =genes=, =transcripts= etc return a =list= in the ="entrezid"= column
+  of the resulting result object.
 
 
 * Getting or building =EnsDb= databases/packages
@@ -824,26 +884,31 @@ annotations from Ensembl version 86.
 Since Bioconductor version 3.5 =EnsDb= databases can also be retrieved directly
 from =AnnotationHub=.
 
-#+BEGIN_SRC R :ravel message = FALSE
+#+NAME: AnnotationHub-query
+#+BEGIN_SRC R :ravel message = FALSE, eval = use_network
   library(AnnotationHub)
   ## Load the annotation resource.
   ah <- AnnotationHub()
 
   ## Query for all available EnsDb databases
   query(ah, "EnsDb")
+
 #+END_SRC
 
 We can simply fetch one of the databases.
 
-#+BEGIN_SRC R
+#+NAME: AnnotationHub-query-2
+#+BEGIN_SRC R :ravel message = FALSE, eval = use_network
   ahDb <- query(ah, pattern = c("Xiphophorus Maculatus", "EnsDb", 87))
   ## What have we got
   ahDb
+
 #+END_SRC
 
 Fetch the =EnsDb= and use it.
 
-#+BEGIN_SRC R :ravel eval = FALSE
+#+NAME: AnnotationHub-fetch
+#+BEGIN_SRC R :ravel message = FALSE, eval = FALSE
   ahEdb <- ahDb[[1]]
 
   ## retriebe all genes
@@ -869,7 +934,8 @@ the Ensembl core databases. The =makeEnsembldbPackage= function is then used to
 create an annotation package from this =EnsDb= containing all human genes for
 Ensembl version 75.
 
-#+BEGIN_SRC R :ravel eval=FALSE
+#+NAME: edb-from-ensembl
+#+BEGIN_SRC R :ravel message = FALSE, eval = FALSE
   library(ensembldb)
 
   ## get all human gene/transcript/exon annotations from Ensembl (75)
@@ -922,8 +988,8 @@ then use the =getGenomeFaFile= method on the =EnsDb= to directly look up and
 retrieve the correct or best matching =FaFile= with the genomic DNA sequence. At
 last we retrieve the sequences of all exons using the =getSeq= method.
 
-
-#+BEGIN_SRC R :ravel eval=FALSE
+#+NAME: gtf-gff-edb
+#+BEGIN_SRC R :ravel message = FALSE, eval = FALSE
   ## Load the AnnotationHub data.
   library(AnnotationHub)
   ah <- AnnotationHub()
@@ -957,7 +1023,8 @@ In the example below we load a =GRanges= containing gene definitions for genes
 encoded on chromosome Y and generate a =EnsDb= SQLite database from that
 information.
 
-#+BEGIN_SRC R :ravel message=FALSE
+#+NAME: EnsDb-from-Y-GRanges
+#+BEGIN_SRC R :ravel message = FALSE, eval = use_network
   ## Generate a sqlite database from a GRanges object specifying
   ## genes encoded on chromosome Y
   load(system.file("YGRanges.RData", package = "ensembldb"))
@@ -986,7 +1053,8 @@ length information automatically from Ensembl.
 
 Below we create the annotation from a gtf file that we fetch directly from Ensembl.
 
-#+BEGIN_SRC R :ravel eval=FALSE
+#+NAME: EnsDb-from-GTF
+#+BEGIN_SRC R :ravel message = FALSE, eval = FALSE
   library(ensembldb)
 
   ## the GTF file can be downloaded from
@@ -1017,9 +1085,6 @@ might not be available in all =EnsDB= databases (e.g. such ones created with
 + *gene*: all gene specific annotations.
   - =gene_id=: the Ensembl ID of the gene.
   - =gene_name=: the name (symbol) of the gene.
-  - =entrezid=: the NCBI Entrezgene ID(s) of the gene. Note that this can be a
-    =;= separated list of IDs for genes that are mapped to more than one
-    Entrezgene.
   - =gene_biotype=: the biotype of the gene.
   - =gene_seq_start=: the start coordinate of the gene on the sequence (usually
     a chromosome).
@@ -1027,6 +1092,11 @@ might not be available in all =EnsDB= databases (e.g. such ones created with
   - =seq_name=: the name of the sequence (usually the chromosome name).
   - =seq_strand=: the strand on which the gene is encoded.
   - =seq_coord_system=: the coordinate system of the sequence.
+
++ *entrezgene*: mapping of Ensembl genes to NCBI Entrezgene identifiers. Note that
+  this mapping can be a one-to-many mapping.
+  - =gene_id=: the Ensembl gene ID.
+  - =entrezid=: the NCBI Entrezgene ID.
 
 + *tx*: all transcript related annotations. Note that while no =tx_name= column
   is available in this database column, all methods to retrieve data from the
@@ -1141,6 +1211,7 @@ Start the server using =mysql.server start=.
 
   ## Download and install the Ensembl core database
   perl installEnsembldb.pl -e 85 -d homo_sapiens_core_85_38
+
 #+END_SRC
 
 
@@ -1709,18 +1780,20 @@ first passed argument. I can check for an existing column using the
 =exists("gene_id")= function.
 
 
-** TODO Ensure all depending packages work with =AnnotationFilter=
+** DONE Ensure all depending packages work with =AnnotationFilter=
+   CLOSED: [2017-05-16 Tue 06:24]
 
-+ [ ] =biovizBase=: *has to be fixed*. Uses filter classes from =ensembldb=. Forked
+   - State "DONE"       from "TODO"       [2017-05-16 Tue 06:24]
++ [X] =biovizBase=: *has to be fixed*. Uses filter classes from =ensembldb=. Forked
   the repo from github mirror and fixed it in version 1.23.3 (i.e. import
   filters from =AnnotationFilter= instead.
 + [X] =Gviz=: OK if =biovizBase= is fixed.
 + [X] =ChIPpeakAnno=: OK if =biovizBase= is fixed.
-+ [ ] =Pbase=: *has to be fixed*.
-+ [ ] =TVTB=: added an issue to https://github.com/kevinrue/TVTB/issues/5. Just
++ [X] =Pbase=: *has to be fixed*.
++ [X] =TVTB=: added an issue to https://github.com/kevinrue/TVTB/issues/5. Just
   needs to import the filters from =AnnotationFilter= instead of =ensembldb=.
 + [X] =VariantFiltering=: OK once =biovizBase= builds. Probably due to that.
-+ [ ] =chimeraviz=: added an issue to
++ [X] =chimeraviz=: added an issue to
   https://github.com/stianlagstad/chimeraviz/issues/3. Just needs to import the
   =GeneIdFilter= from =AnnotationFilter= instead.
 + [X] =ggbio=: *has to be fixed*.
@@ -1737,13 +1810,15 @@ The remaining packages (=Gviz=, =alpine=, =ChIPpeakAnno=).
 
 
 Steps when =AnnotationFilter= is accepted:
-+ [ ] Contact Micheal Lawrence that =biovizBase= and =ggbio= should be fixed (have
++ [X] Contact Micheal Lawrence that =biovizBase= and =ggbio= should be fixed (have
   patches).
-+ [ ] Push new =ensembldb= package.
-+ [ ] Contact developers of =chimeraviz= and =TVTB= and =wiggleplotr=.
++ [X] Push new =ensembldb= package.
++ [X] Contact developers of =chimeraviz= and =TVTB= and =wiggleplotr=.
 
-** TODO Fix/check packages failing to build for Bioc 3.5
+** DONE Fix/check packages failing to build for Bioc 3.5
+   CLOSED: [2017-05-16 Tue 06:24]
 
+   - State "DONE"       from "TODO"       [2017-05-16 Tue 06:24]
 A
 + [ ] affycoretools: because of ReportingTools
 + [ ] AgiMicroRna: because of affycoretools
@@ -1865,3 +1940,179 @@ Base on =ensembldb=:
 + [X] =ggbio=:
 + [ ] =Pbase=:
 + [ ] =wiggleplotr=:
+** TODO entrezid in separate database table
+
++ [X] Perl script to save =entrezid= into a separate table =entrezgene=.
++ [X] Import script to create the additional table and indices (=gene_id= and
+  =entrezid=).
++ [X] Concatenate on SQL levels? =group_concat(X,Y)=. NO! Return the result as a
+  list.
++ [X] Test if queries work for genes that don't have an entry in =entrezid=,
+  otherwise save just the =gene_id= into the table without =entrezid=. Using a =left
+  outer join= seems to fix that.
++ [X] Different SQL queries depending on DBSCHEMA version: extract the
+  DBSCHEMAVERSION using the =dbSchemaVersion= function (passing the =EnsDb=). Seems
+  to work out of the box - no need to make schema dependent calls.
+
++ [X] Put =entrezid= as a =list= into =GRanges=? The point is we have to collapse the
+  entries we have to specify by what. E.g. by =gene_id= if the call is =genes=, by
+  =exon_id= if the call is =exons= or =exonsBy= etc. WORKS.
++ [X] Validity dependent on DB schema.
++ [ ] Build from GRanges: use database version 2.0 schema?
++ [X] Update documentation: mention that column entrezid is a =list=.
++ [X] Update vignette: mention that column entrezid is a =list= and update the
+  database layout.
++ [X] Fix =select=.
++ [X] Fix =mapIds=.
++ [X] Check the package on the database with DBSCHEMAVERSION 1.0.
++ [X] Check the package on the database with DBSCHEMAVERSION 2.0.
+
+
+Some test code below.
+#+BEGIN_SRC R :eval never
+  library(ensembldb)
+  library(testthat)
+
+  edb <- EnsDb("/Users/jo/tmp/ensdb_20/EnsDb.Hsapiens.v88.sqlite")
+
+  ensembldb:::dbSchemaVersion(edb)
+
+  system.time(gns1 <- genes(edb, return.type = "data.frame")) ## 0.677 sec
+  system.time(gns2 <- genes(edb, return.type = "data.frame",
+			    columns = c(listColumns(edb, "gene"), "entrezid"))) ## 1.5
+
+  all(unique(gns1$gene_id) == unique(gns2$gene_id))
+  expect_equal(gns1$gene_id, gns2$gene_id)
+
+  ## Seems to work...
+  gns2 <- genes(edb, columns = c(listColumns(edb, "gene"), "entrezid"))
+
+  ## Check for transcripts
+  ## transcripts
+  system.time(tx1 <- transcripts(edb))  ## 3.2 sec
+  system.time(tx2 <- transcripts(
+		  edb, columns = c(listColumns(edb, "tx"), "entrezid")))  ## 5.5
+  expect_equal(length(tx1), length(tx2))
+  expect_equal(mcols(tx1), mcols(tx2)[, -ncol(mcols(tx2))])
+  expect_equal(names(tx1), names(tx2))
+
+  ## transcriptsBy
+  tx1 <- transcriptsBy(edb)
+  tx2 <- transcriptsBy(edb, columns = c(listColumns(edb, "tx"), "entrezid"))
+  expect_equal(length(tx1), length(tx2))
+  expect_equal(mcols(tx1), mcols(tx2)[, -ncol(mcols(tx2))])
+  expect_equal(names(tx1), names(tx2))
+
+
+  ## Check for exons
+  ## exons
+  ex1 <- exons(edb)
+  ex2 <- exons(edb, columns = c(listColumns(edb, "exon"), "entrezid"))
+  expect_equal(length(ex1), length(ex2))
+  expect_equal(names(ex1), names(ex2))
+  ## Are all entrezids unique?
+  lens <- lengths(ex2$entrezid)
+  lens_2 <- lengths(lapply(ex2$entrezid, unique))
+  expect_equal(lens, lens_2)
+
+  ## exonsBy
+  ex1 <- exonsBy(edb)
+  ex2 <- exonsBy(edb, columns = c(listColumns(edb, "exon"), "entrezid"))
+  all.equal(names(ex1), names(ex2))
+  expect_equal(length(ex1), length(ex2))
+  expect_equal(mcols(ex1), mcols(ex2)[, -ncol(mcols(ex2))])
+
+  ## cdsBy
+  cs1 <- cdsBy(edb)
+  cs2 <- cdsBy(edb, columns = c("entrezid"))
+  all.equal(names(cs1), names(cs2))
+  expect_equal(length(cs1), length(cs2))
+  expect_equal(mcols(cs1), mcols(cs2)[, -1])
+
+  ## threeUTRsByTranscript
+  tu1 <- threeUTRsByTranscript(edb)
+  tu2 <- threeUTRsByTranscript(edb, columns = "entrezid")
+  all.equal(names(tu1), names(tu2))
+  expect_equal(length(tu1), length(tu2))
+  expect_equal(mcols(tu1), mcols(tu2)[, -1])
+  ## fiveUTRsByTranscript
+  fu1 <- fiveUTRsByTranscript(edb)
+  fu2 <- fiveUTRsByTranscript(edb, columns = "entrezid")
+  all.equal(names(fu1), names(fu2))
+  expect_equal(length(fu1), length(fu2))
+  expect_equal(mcols(fu1), mcols(fu2)[, -1])
+
+  ## proteins
+  pr1 <- proteins(edb)
+  pr2 <- proteins(edb, columns = c(listColumns(edb, "protein"), "entrezid"))
+  all.equal(pr1$protein_id, pr2$protein_id)
+  expect_equal(pr1, pr2[, -ncol(pr2)])
+
+
+  tmp <- ensembldb:::getWhat(edb, columns = c(listColumns(edb, "gene"), "entrezid"))
+
+  system.time(tmp_u <- unique(tmp[, -ncol(tmp)]))  ## 0.194
+
+  system.time(tmp_1 <- .collapseEntrezidInTable(tmp, by = "gene_id"))
+  system.time(tmp_2 <- ensembldb:::.collapseEntrezidInTable(tmp, by = "gene_id"))
+
+  expect_equal(tmp_1, tmp_2)
+
+
+  ## Check if we could do it faster...
+  system.time(ids <- apply(tmp[, -ncol(tmp)], MARGIN = 1, FUN = paste0, collapse = ""))
+
+  system.time(egs <- split(tmp$entrezid,
+			   f = factor(tmp$gene_id, levels = unique(tmp$gene_id))))  ## 0.019
+  system.time(egs <- lapply(egs, unique))  ## 0.6
+
+  system.time(eg2 <- aggregate(tmp$entrezid,
+			       by = list(factor(tmp$gene_id,
+					   levels = unique(tmp$gene_id))),
+			       FUN = unique))
+
+  system.time(tmp <- unique(gns2[, colnames(gns2) != "entrezid"]))  ## 0.201
+
+  system.time(tmp2 <- gns2[match(names(egs), gns2$gene_id), ])  ## 0.029
+
+  all.equal(tmp, tmp2[, -ncol(tmp2)])
+
+  DF <- DataFrame(tmp2)
+  DF$entrezid <- egs
+
+  system.time(Test <- .collapseEntrezidInTable(gns2))  ## 0.05
+#+END_SRC
+
+Testing select etc methods:
+#+BEGIN_SRC R
+  library(ensembldb)
+  library(testthat)
+
+  edb <- EnsDb("/Users/jo/tmp/ensdb_20/EnsDb.Hsapiens.v88.sqlite")
+
+  all <- select(edb) ## THAT SHOULD WORK!
+  all <- select(edb, keys = ~ symbol == "BCL2")
+
+  gns <- genes(edb)
+
+  ## Gene with multiple entrezgenes
+  all <- select(edb, keys = ~ symbol == "DDX11L1")
+
+  all_u <- unique(all[, -1])
+  n_entrez <- length(unique(all[, 1]))
+  ## Expect that the nrow of 'all' is:
+  expect_equal(nrow(all_u) * n_entrez, nrow(all))
+
+  ## Looks OK.
+  vals <- mapIds(edb, keys = "DDX11L1", column = "ENTREZID", keytype = "SYMBOL",
+		 multiVals = "list")
+  expect_equal(length(vals[[1]]), n_entrez)
+
+  ## Seems to work...
+  vals <- mapIds(edb, keys = ~ symbol %in% c("BCL2", "DDX11L1", "ZBTB16"),
+		 column = "ENTREZID", multiVals = "list")
+  vals
+
+#+END_SRC
+
+Seems to work out of the box...

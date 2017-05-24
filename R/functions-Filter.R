@@ -71,7 +71,7 @@
 #' @noRd
 .conditionForEnsDb <- function(x) {
     cond <- condition(x)
-    if (length(value(x)) > 1) {
+    if (length(unique(value(x))) > 1) {
         if (cond == "==")
             cond <- "in"
         if (cond == "!=")
