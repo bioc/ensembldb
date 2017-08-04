@@ -309,11 +309,18 @@ ensDbFromGtf <- function(gtf, outfile, path, organism, genomeVersion,
     tmp <- readLines(gtf, n=10)
     tmp <- tmp[grep(tmp, pattern="^#")]
     haveHeader <- FALSE
-    if(length(tmp) > 0){
+    if (length(tmp) > 0) {
         ##message("GTF file has a header.")
-        tmp <- gsub(tmp, pattern="^#", replacement="")
-        tmp <- gsub(tmp, pattern="^!", replacement="")
-        Header <- do.call(rbind, strsplit(tmp, split=" ", fixed=TRUE))
+        tmp <- gsub(tmp, pattern = "^#", replacement = "")
+        tmp <- gsub(tmp, pattern = "^!", replacement = "")
+        ## Splitting by " " but be careful, if there are more than one " "!
+        hdr <- strsplit(tmp, split = " ", fixed = TRUE)
+        hdr <- lapply(hdr, function(z) {
+            if (length(z) > 2)
+                z[2] <- paste(z[2:length(z)], collapse = " ")
+            z[1:2]
+        })
+        Header <- do.call(rbind, hdr)
         colnames(Header) <- c("name", "value")
         haveHeader <- TRUE
     }
