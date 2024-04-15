@@ -1,3 +1,7 @@
+Changes in version 2.26.1
+
+- Small documentation update.
+
 Changes in version 2.25.1
 
 - Skip reading gtf file from Ensembl ftp server in unit test.
