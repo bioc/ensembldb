@@ -1,3 +1,14 @@
+test_that("proteinToGenome fails on IRanges without IDs", {
+    rng <- IRanges(start = c(123, 322), end = c(234, 444))
+    expect_error(proteinToGenome(rng, edb), "No protein/transcript")
+    names(rng) <- c(NA_character_, NA_character_)
+    expect_error(proteinToGenome(rng, edb), "No protein/transcript")
+    expect_error(proteinToGenome(rng, edb, id = "ann"), "should be either")
+    names(rng) <- NULL
+    mcols(rng)$ann <- c(NA_character_, NA_character_)
+    expect_error(proteinToGenome(rng, edb), "No protein/transcript")
+})
+
 test_that(".proteinCoordsToTx works", {
     prts <- IRanges(start = c(1, 2), end = c(1, 2))
     res <- .proteinCoordsToTx(prts)
@@ -277,7 +288,7 @@ test_that("proteinToTranscript works", {
 
     ## Preloaded data test
     expect_warning(tx_rel_preload <- proteinToTranscript(prngs, cds,
-        idType = "uniprot_id", 
+        idType = "uniprot_id",
         fiveUTR = fiveUTR))
     expect_equal(tx_rel_preload,tx_rel)
 
@@ -291,7 +302,7 @@ test_that("proteinToTranscript works", {
     expect_equal(unlist(unname(start(res))), c(-1, -1))
 
     ## Preloaded data test
-    expect_warning(res_preload <- proteinToTranscript(prngs, cds, 
+    expect_warning(res_preload <- proteinToTranscript(prngs, cds,
         fiveUTR = fiveUTR))
     expect_equal(res_preload,res)
 })
