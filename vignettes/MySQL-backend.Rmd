@@ -33,7 +33,7 @@ this would require access to a MySQL server.
 Installation of `EnsDb` databases in a MySQL server is straight forward - given
 that the user has write access to the server:
 
-```{r  eval = FALSE }
+```{r, eval = FALSE}
 library(ensembldb)
 ## Load the EnsDb package that should be installed on the MySQL server
 library(EnsDb.Hsapiens.v86)
@@ -45,7 +45,7 @@ edb_mysql <- useMySQL(EnsDb.Hsapiens.v86, host = "localhost",
 
 ## Use this EnsDb object
 genes(edb_mysql)
- 
+
 ```
 
 To use an `EnsDb` in a MySQL server without the need to install the corresponding
@@ -53,7 +53,7 @@ R-package, the connection to the database can be passed to the `EnsDb` construct
 function. With the resulting `EnsDb` object annotations can be retrieved from the
 MySQL database.
 
-```{r  eval = FALSE }
+```{r, eval = FALSE}
 library(ensembldb)
 library(RMariaDB)
 
@@ -69,13 +69,12 @@ dbcon <- dbConnect(MariaDB(), host = "localhost", user = "readonly",
                    pass = "readonly", dbname = "ensdb_hsapiens_v75")
 edb <- EnsDb(dbcon)
 edb
- 
+
 ```
 
 
 # Session information
 
 ```{r  sessionInfo }
-sessionInfo() 
+sessionInfo()
 ```
-
