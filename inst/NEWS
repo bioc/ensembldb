@@ -1,3 +1,9 @@
+Changes in version 2.28.1
+
+- Improve documentation of `proteinToGenome()` better describing the input
+  parameters. Check input of `proteinToGenome()` to throw an error if no
+  identifiers are provided.
+
 Changes in version 2.27.1
 
 - Functions for coordinate mapping gain support for pre-loaded genomic ranges
